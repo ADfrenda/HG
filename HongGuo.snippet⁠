@@ -14,7 +14,7 @@
 ^https?:\/\/.*\.byteoversea\.com\/.*log\/ reject-200
 
 # 3. 劫持短剧解锁的广告流请求（已修正标准 Raw 路径 + 强效国内镜像加速）
-^https?:\/\/.*\.snssdk\.com\/api\/ad\/union\/sdk\/get_ads\/ url script-response-body https://mirror.ghproxy.com/https://raw.githubusercontent.com/ADfrenda/HG/main/hongguo_ad.js
+^https?:\/\/.*\.snssdk\.com\/api\/ad\/union\/sdk\/get_ads\/ url script-response-body https://mirror.ghproxy.com/https://raw.githubusercontent.com/ADfrenda/HG/main/hongguo_ad.js%E2%81%A0
 
 [mitm]
 hostname = *.snssdk.com, *.pstatp.com, *.bdurl.net, *.volces.com, *.byteoversea.com
