@@ -1,0 +1,28 @@
+/*
+红果短剧/穿山甲 SDK 广告数据劫持
+*/
+
+let body = $response.body;
+
+if (body) {
+    try {
+        let obj = JSON.parse(body);
+        
+        // 1. 清空穿山甲/GroMore 返回的广告素材列表
+        if (obj.creatives) obj.creatives = [];
+        if (obj.ads) obj.ads = [];
+        if (obj.data && obj.data.ads) obj.data.ads = [];
+        
+        // 2. 注入虚假的成功状态码，防止播放器因为拿不到数据而无限转圈
+        obj.status_code = 0;
+        obj.code = 0;
+        obj.msg = "success";
+        obj.message = "success";
+        
+        body = JSON.stringify(obj);
+    } catch (e) {
+        // 如果是加密或者非 JSON 数据，则不做处理，防止脚本崩溃
+    }
+}
+
+$done({ body });
