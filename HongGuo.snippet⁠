@@ -15,6 +15,5 @@
 
 # 3. 劫持短剧解锁的广告流请求（核心：调用刚才上传的 JS 脚本）
 ^https?:\/\/.*\.snssdk\.com\/api\/ad\/union\/sdk\/get_ads\/ url script-response-body https://raw.githubusercontent.com/ADfrenda/HG/main/hongguo_ad.js
-
 [mitm]
 hostname = *.snssdk.com, *.pstatp.com, *.bdurl.net, *.volces.com, *.byteoversea.com
