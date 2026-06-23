@@ -1,0 +1,20 @@
+# 重写名称：红果免费短剧去广告 (自托管纯净版)
+# 适用软件：Quantumult X
+# 核心作用：剥离穿山甲广告联盟、数据追踪，并劫持激励视频回调
+
+[rewrite_local]
+# 1. 屏蔽/拒绝广告联盟初始化及域名（直接拒绝）
+^https?:\/\/.*\.snssdk\.com\/api\/ad\/url\/ reject-200
+^https?:\/\/.*\.pstatp\.com\/.*\/ad\/ reject-200
+
+# 2. 拦截数据追踪与日志上报（减少无用网络请求，顺便省电）
+^https?:\/\/.*\.snssdk\.com\/service\/2\/app_log\/ reject-200
+^https?:\/\/.*\.bdurl\.net\/.*log\/ reject-200
+^https?:\/\/.*\.volces\.com\/.*log\/ reject-200
+^https?:\/\/.*\.byteoversea\.com\/.*log\/ reject-200
+
+# 3. 劫持短剧解锁的广告流请求（核心：调用刚才上传的 JS 脚本）
+^https?:\/\/.*\.snssdk\.com\/api\/ad\/union\/sdk\/get_ads\/ url script-response-body https://raw.githubusercontent.com/你的GitHub用户名/你的仓库名/main/hongguo_ad.js
+
+[mitm]
+hostname = *.snssdk.com, *.pstatp.com, *.bdurl.net, *.volces.com, *.byteoversea.com
