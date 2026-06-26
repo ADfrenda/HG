@@ -1,5 +1,5 @@
 /**
- * Quantumult X 纯本地运行版（防拦截、防缓存）
+ * Quantumult X 本地高精线路查询脚本 (显示优化版)
  */
 
 const targetIP = ""; 
@@ -7,16 +7,16 @@ const url = `https://api.ip.sb/geoip/${targetIP}`;
 
 $task.fetch({ url: url }).then(response => {
     if (!response.body) {
-        $notify("❌ 查询失败", "", "返回体为空");
+        $notify("❌ 查询失败", "", "服务器返回内容为空");
         $done();
         return;
     }
     
     const str = response.body.trim();
     
-    // 🛡️ 严格防错：如果返回的不是以 { 开头的 JSON，说明被拦截了
+    // 防御：如果不是 JSON 格式，说明遇到网络拦截
     if (!str.startsWith("{")) {
-        $notify("⚠️ 节点网络受阻", "未获取到有效数据", "当前节点可能触发了API的防火墙，请换个节点再试");
+        $notify("⚠️ 节点网络受阻", "未能获取有效数据", "当前节点可能触发了防火墙，请换个节点再试");
         $done();
         return;
     }
@@ -42,7 +42,12 @@ $task.fetch({ url: url }).then(response => {
             isOptimized = true;
         }
 
-        $notify(isOptimized ? "👑 发现优质优化线路" : "🔍 节点线路查询结果", `目标 IP: ${ip}`, `地区: ${country}\n运营商: ${isp}\n自治域: ${asn}\n线路级别: ${lineType}`);
+        // 🔀 调整显示顺序：把【是否优化】和【线路级别】直接拍在最顶部（标题栏）
+        const title = isOptimized ? `👑 优质线路 · ${lineType}` : `${lineType}`;
+        const subtitle = `目标 IP: ${ip}`;
+        const detail = `国家/地区: ${country}\n运营商: ${isp}\n自治域: ${asn}`;
+
+        $notify(title, subtitle, detail);
     } catch (e) {
         $notify("❌ 解析错误", "", e.message);
     }
