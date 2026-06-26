@@ -1,79 +1,69 @@
- 
 /**
- * Quantumult X 节点/IP 线路属性查询脚本（智能双主备防流版）
+ * Quantumult X 节点线路属性查询（防崩溃高稳定性版）
  */
 
-// 填入你想查询的特定 IP。如果想测试当前节点本身，请保持双引号内为空 ""
-const targetIP = ""; 
+const targetIP = ""; // 留空代表查询当前代理节点本身的公网IP线路
+const url = `https://ipwho.is/${targetIP}`;
 
-// 1. 首先尝试主 API
-function queryPrimary() {
-    const url = `http://ip-api.com/json/${targetIP}?fields=status,message,country,countryCode,isp,as,query`;
-    
-    $task.fetch({ url: url }).then(response => {
-        try {
-            if (!response.body) throw new Error("返回体为空");
-            const data = JSON.parse(response.body);
-            if (data.status !== "success") throw new Error(data.message || "被限流");
-            
-            // 成功则解析
-            showResult(data.query, data.country, data.countryCode, data.isp, data.as || "");
-        } catch (e) {
-            console.log(`[⚠️ 主 API 异常]: ${e.message}。正在无缝切换至备用 HTTPS 数据库...`);
-            queryBackup();
-        }
-    }, () => queryBackup());
-}
-
-// 2. 备用 API（走 HTTPS 更加稳定，防劫持）
-function queryBackup() {
-    const url = `https://ipapi.co/${targetIP ? targetIP + '/' : ''}json/`;
-    
-    $task.fetch({ url: url }).then(response => {
-        try {
-            if (!response.body) throw new Error("备用 API 返回体为空");
-            const data = JSON.parse(response.body);
-            if (data.error) throw new Error(data.reason || "备用服务报错");
-            
-            // 成功则解析备用格式
-            showResult(data.ip, data.country_name, data.country_code, data.org, data.asn || "");
-        } catch (e) {
-            $notify("❌ 线路查询完全失败", "主备数据库均无法响应", "原因: 当前节点请求过于频繁或网络彻底断开");
-            console.log(`[❌ 备用 API 同样失败]: ${e.message}\n服务器原始响应: ${response.body}`);
-            $done();
-        }
-    }, reason => {
-        $notify("❌ 线路查询网络错误", "无法连接到外部数据库", reason.error || "请检查网络");
+$task.fetch({ url: url }).then(response => {
+    if (!response.body) {
+        $notify("❌ 线路查询失败", "", "服务器返回体为空");
         $done();
-    });
-}
-
-// 3. 统一渲染和分类逻辑
-function showResult(ip, country, countryCode, isp, asn) {
-    let lineType = "ℹ️ 普通常规线路";
-    let isOptimized = false;
-
-    // 智能匹配优化线路特征 ASN
-    if (asn.includes("AS4809")) {
-        lineType = "✨ 电信 CN2 GIA/GT [AS4809]";
-        isOptimized = true;
-    } else if (asn.includes("AS9929") || asn.includes("AS10099")) {
-        lineType = "✨ 联通高端 A9929 [AS9929]";
-        isOptimized = true;
-    } else if (asn.includes("AS10222")) {
-        lineType = "✨ 移动精品 CMIN2 [AS10222]";
-        isOptimized = true;
+        return;
     }
 
-    const title = isOptimized ? "👑 发现优质优化线路" : "🔍 节点线路查询结果";
-    const subtitle = `目标 IP: ${ip} (${countryCode})`;
-    const detail = `区域: ${country}\n运营商: ${isp}\n自治域: ${asn}\n线路级别: ${lineType}`;
+    const bodyText = response.body.trim();
 
-    // 触发系统弹窗
-    $notify(title, subtitle, detail);
-    console.log(`\n[🎉 查询成功]\n${subtitle}\n${detail}\n`);
+    // 🛡️ 核心防御：如果返回内容以 < 开头（说明是 HTML 报错网页或拦截墙），优雅退出
+    if (bodyText.startsWith("<") || bodyText.toLowerCase().includes("<!doctype")) {
+        $notify("⚠️ 节点被查询网站拦截", "未能获取到线路数据", "当前机场节点请求太频繁，已被API网站暂时拒绝，请切换节点再试");
+        $done();
+        return;
+    }
+
+    try {
+        const data = JSON.parse(bodyText);
+        if (data.success !== true) {
+            $notify("❌ 线路查询失败", "", data.message || "未知错误");
+            $done();
+            return;
+        }
+
+        const ip = data.ip || "未知";
+        const country = data.country || "未知";
+        const countryCode = data.country_code || "";
+        const connection = data.connection || {};
+        const isp = connection.isp || "未知";
+        const asn = connection.asn ? `AS${connection.asn}` : "";
+
+        let lineType = "ℹ️ 普通常规线路";
+        let isOptimized = false;
+
+        // 智能匹配优化线路特征 ASN
+        if (asn.includes("AS4809")) {
+            lineType = "✨ 电信 CN2 GIA/GT [AS4809]";
+            isOptimized = true;
+        } else if (asn.includes("AS9929") || asn.includes("AS10099")) {
+            lineType = "✨ 联通高端 A9929 [AS9929]";
+            isOptimized = true;
+        } else if (asn.includes("AS10222")) {
+            lineType = "✨ 移动精品 CMIN2 [AS10222]";
+            isOptimized = true;
+        }
+
+        const title = isOptimized ? "👑 发现优质优化线路" : "🔍 节点线路查询结果";
+        const subtitle = `目标 IP: ${ip} (${countryCode})`;
+        const detail = `区域: ${country}\n运营商: ${isp}\n自治域: ${asn}\n线路级别: ${lineType}`;
+
+        $notify(title, subtitle, detail);
+        $done();
+
+    } catch (e) {
+        $notify("❌ 脚本解析异常", "JSON 格式转换失败", e.message);
+        console.log(`[解析失败] 原始内容为: ${bodyText}`);
+        $done();
+    }
+}, reason => {
+    $notify("❌ 线路查询网络错误", "无法连接到外部数据库", reason.error || "请检查网络");
     $done();
-}
-
-// 启动执行
-queryPrimary();
+});
