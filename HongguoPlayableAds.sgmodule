@@ -1,0 +1,25 @@
+#!name=红果试玩广告拦截
+#!desc=拦截红果短剧里 JJ 斗地主等试玩（小游戏）广告：游戏素材、控制与统计走 JJ 自家域名，不走穿山甲，所以主模块拦不到。配合「红果短剧去广告」使用。
+#!author=Muse
+#!version=1.0
+#!category=去广告
+
+[Rule]
+# JJ 试玩广告的素材与控制全部走 JJ 自家域名（2026-11-24 实抓）：
+# lordmini.oss.jjbisai.com（小游戏素材）、ttminigame.srv.jjmatch.cn、
+# aetcollector/aetcontrol.srv.jjmatch.cn、stat-act.srv.jj.cn、
+# p3-mgsdk.dailygn.com（小游戏 SDK）。
+# 用 pre-matching 让这几条优先于主配置 ChinaCIDR 的 DIRECT。
+DOMAIN-SUFFIX,jjmatch.cn,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,jjbisai.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,jj.cn,REJECT,extended-matching,pre-matching
+DOMAIN-WILDCARD,*-mgsdk.dailygn.com,REJECT,extended-matching,pre-matching
+
+[Host]
+# DNS 层兜底，与 [Rule] 一一对应
+lordmini.oss.jjbisai.com = 127.0.0.1
+ttminigame.srv.jjmatch.cn = 127.0.0.1
+aetcollector.srv.jjmatch.cn = 127.0.0.1
+aetcontrol.srv.jjmatch.cn = 127.0.0.1
+stat-act.srv.jj.cn = 127.0.0.1
+p3-mgsdk.dailygn.com = 127.0.0.1
