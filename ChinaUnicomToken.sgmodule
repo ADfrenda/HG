@@ -1,0 +1,4 @@
+#!name=中国联通token抓取
+#!desc=为 loginxx.10010.com 开启 MITM, 让联通 App 的 onLine 登录请求能被 Surge 看到, 从而抓到 token_online。只加 MITM 主机名, 不改其他配置。
+[MITM]
+hostname = loginxx.10010.com
