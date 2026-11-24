@@ -67,6 +67,7 @@
   }
 
   try {
+    try { $persistentStore.write(JSON.stringify({url: (typeof $request !== "undefined" && $request.url) || "", method: (typeof $request !== "undefined" && $request.method) || "", time: new Date().toISOString()}), "ChinaUnicomTokenLastRun"); } catch (_) {}
     if (typeof $request === "undefined") return;
     if (!TARGET.test($request.url || "")) return;
 
