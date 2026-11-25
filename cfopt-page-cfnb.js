@@ -15,9 +15,9 @@
  $('ghpush').onclick=function(){
   var sel=getSelected();
   if(!sel.length)return note('请先勾选要推送的 IP');
-  var lines=sel.map(function(r){return r.ip+':443#'+(r.colo||'未知')+' '+(r.mbps?r.mbps.toFixed(2)+' MB/s':'')}).join('\n');
+  var lines=sel.map(function(r){return r.ip+':443#'+(r.colo||'未知')+' '+(r.mbps?r.mbps.toFixed(2)+' MB/s':'')}).join('\\n');
   note('正在推送 '+sel.length+' 个 IP 到 GitHub…');
-  call('ghpush',{ips:sel.map(function(r){return {ip:r.ip,colo:r.colo||'',mbps:r.mbps||0}})}).then(function(s){note(s.msg||('已推送 '+sel.length+' 个 IP 到 yxip.txt'))}).catch(function(e){note('推送失败：'+e.message+'\n\n可复制以下内容手动处理：\n'+lines)});
+  call('ghpush',{ips:sel.map(function(r){return {ip:r.ip,colo:r.colo||'',mbps:r.mbps||0}})}).then(function(s){note(s.msg||('已推送 '+sel.length+' 个 IP 到 yxip.txt'))}).catch(function(e){note('推送失败：'+e.message+'\\n\\n可复制以下内容手动处理：\\n'+lines)});
  };
  window.addEventListener('error',function(ev){fail(ev.message||'脚本错误')});\n})();\n</script></body></html>\n";
   return reply(200,PAGE.replace('__COUNT__',String(PARAM_COUNT)),'text/html; charset=utf-8');
