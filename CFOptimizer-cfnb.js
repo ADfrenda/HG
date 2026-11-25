@@ -118,7 +118,7 @@ var CFEngine = (function () {
     if(stop()) return bad('stopped'); if(used) return bad('baseline-already-used'); used=true;
     if(!canRequest()) return bad('supported-surge-ios-required');
     const rounds=integer(cfg.rounds,defaults.rounds,1,3), timeout=integer(cfg.timeout,defaults.timeout,1,8);
-    const bytes=integer(cfg.bytes,defaults.bytes,16384,262144); let last='no-successful-samples';
+    const bytes=integer(cfg.bytes,defaults.bytes,16384,1048576); let last='no-successful-samples';
     for(let i=0;i<rounds;i++) {
       if(stop()) return bad('stopped'); r.attempts++;
       try { const s=await sample(1,timeout);r.successes++;r.samplesMs.push(s.ms);r.colo=s.colo; }
