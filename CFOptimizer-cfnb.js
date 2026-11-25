@@ -185,7 +185,7 @@ var CFEngine = (function () {
     }
    }catch(e){r.reason=String(e.message||e).slice(0,70)}
   }
-  if(r.samples.length){r.min=Math.min(...r.samples);r.max=Math.max(...r.samples);r.avg=r.samples.reduce((a,b)=>a+b,0)/r.samples.length}
+  if(r.samples.length){r.min=Math.min(...r.samples);r.max=Math.max(...r.samples);r.avg=r.min}
   r.success=r.tries?r.ok/r.tries:0;r.status=r.ok>0?'ok':'unavailable';r.time=nowMs();
   return r;
  }
@@ -229,13 +229,29 @@ var CFEngine = (function () {
   let s=read();s.direct=s.direct||[];s.cfg=s.cfg||{};
   if(path==='/api/ping')return reply(200,{ok:true,ts:nowMs(),paramCount:PARAM_COUNT});
   if(path==='/api/state'&&method==='GET'){console.log('STATE param='+PARAM_COUNT+' raw='+String(typeof $argument==='undefined'?'none':$argument));s.paramCount=PARAM_COUNT;if(s.status==='running'&&(!s.lastTick||nowMs()-s.lastTick>120000)){s.status='stopped';s.error=s.error||'任务已超时停止';clearPin()}s.running=s.status==='running';if(!s.running){clearPin();s.cfg=s.cfg||{};s.cfg.count=PARAM_COUNT}return reply(200,s)}
-  if(method!=='POST'||h['x-cf-local']!=='1'||!['/api/start','/api/batch','/api/stop'].includes(path))return reply(403,{error:'请求被拒绝',type:method!=='POST'?'method-not-allowed':'missing-local-header',path,status:403,hint:'请从本机工作台页面操作'});
+  if(method!=='POST'||h['x-cf-local']!=='1'||!['/api/start','/api/batch','/api/stop','/api/bgstart','/api/ghpush'].includes(path))return reply(403,{error:'请求被拒绝',type:method!=='POST'?'method-not-allowed':'missing-local-header',path,status:403,hint:'请从本机工作台页面操作'});
   const b=JSON.parse($request.body||'{}');
   if(path==='/api/start'){ console.log('START count='+b.count+' param='+PARAM_COUNT); if(s.status==='running'&&s.lastTick&&nowMs()-s.lastTick<15000)return reply(409,{error:'已有扫描在运行，请先停止或等它结束',type:'busy',status:409,hint:'等待进度或点停止后再开始'});
    const cfg={mode:'direct',count:num(b.count,PARAM_COUNT,1,500),tries:num(b.tries,2,1,3),timeout:num(b.timeout,5,1,8),download:b.download!==false,family:['v4','v6','both'].includes(b.family)?b.family:'both'};
    const ranges=await CFEngine.update(false);
    const queue=CFEngine.candidates(ranges,{family:cfg.family,count:cfg.count,seed:nowMs()+''});
    s={cfg,updated:ranges.fetchedAt,source:ranges.source,queue,queueTotal:queue.length,direct:[],results:[],done:0,total:queue.length,status:'running',running:true,error:null,started:nowMs()};save(s);return reply(200,s)
+  }
+  if(path==='/api/bgstart'){
+   if(s.status==='running'&&s.lastTick&&nowMs()-s.lastTick<15000)return reply(409,{error:'已有扫描在运行',type:'busy',status:409});
+   const cfg={mode:'direct',count:num(b.count,PARAM_COUNT,1,500),tries:num(b.tries,3,1,3),timeout:num(b.timeout,5,1,8),download:b.download!==false,family:['v4','v6','both'].includes(b.family)?b.family:'both'};
+   const ranges=await CFEngine.update(false);
+   const queue=CFEngine.candidates(ranges,{family:cfg.family,count:cfg.count,seed:nowMs()+''});
+   s={cfg,updated:ranges.fetchedAt,source:ranges.source,queue,queueTotal:queue.length,direct:[],results:[],done:0,total:queue.length,status:'running',running:true,background:true,error:null,started:nowMs()};save(s);return reply(200,s)
+  }
+  if(path==='/api/ghpush'){
+   const ips=b.ips||[];
+   if(!ips.length)return reply(400,{error:'未选择 IP'});
+   try{
+    const r=await new Promise(res=>{$httpClient.post({url:'http://100.73.171.26:8765/push',headers:{'Content-Type':'application/json'},body:JSON.stringify({ips})},(e,x,d)=>res({err:e?String(e):null,status:x?+x.status:0,data:d}))});
+    if(r.status===200){const j=JSON.parse(r.data||'{}');return reply(200,{ok:true,msg:j.msg||('已推送 '+ips.length+' 个 IP')})}
+    return reply(500,{error:'推送失败：'+(r.data||r.err||r.status)})
+   }catch(e){return reply(500,{error:'推送异常：'+String(e.message||e)})}
   }
   if(path==='/api/stop'){s.status='stopped';s.running=false;clearPin();save(s);return reply(200,s)}
   if(s.status!=='running'){s.running=false;clearPin();return reply(200,s)}
