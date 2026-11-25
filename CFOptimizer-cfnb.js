@@ -2,7 +2,7 @@ var CFEngine = (function () {
   'use strict';
   const host = 'speed.cloudflare.com', key = 'CFOptimizer.CFNB.v1';
   const sources = ['https://raw.githubusercontent.com/ADfrenda/HG/main/cfnb_ips_6countries.txt'];
-  const defaults = Object.freeze({family:'both',count:8,seed:null,exclude:Object.freeze([]),rounds:3,bytes:65536,timeout:4});
+  const defaults = Object.freeze({family:'both',count:8,seed:null,exclude:Object.freeze([]),rounds:3,bytes:1048576,timeout:4});
   const capabilities = Object.freeze({candidateBinding:false,domainBaseline:true});
   const day = 86400000, trusted = new WeakSet();
   let updating, used = false, memory;
@@ -179,7 +179,7 @@ var CFEngine = (function () {
     r.ok++;r.samples.push(t.ms);
     const c=/(?:^|\n)colo=([A-Z]{3})/.exec(String(t.data||''));if(c)r.colo=c[1];
     if(cfg.download&&r.mbps===null){
-     const d=await get('https://speed.cloudflare.com/__down?bytes=65536',true,Math.max(cfg.timeout,5),pol);
+     const d=await get('https://speed.cloudflare.com/__down?bytes=1048576',true,Math.max(cfg.timeout,5),pol);
      const b=d.data&&d.data.byteLength||0;
      if(d.status===200&&b===65536&&d.ms>0){r.bytes=b;r.downloadMs=d.ms;r.mbps=b*8/(d.ms*1000)}
     }
