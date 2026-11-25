@@ -181,7 +181,7 @@ var CFEngine = (function () {
     if(cfg.download&&r.mbps===null){
      const d=await get('https://speed.cloudflare.com/__down?bytes=1048576',true,Math.max(cfg.timeout,5),pol);
      const b=d.data&&d.data.byteLength||0;
-     if(d.status===200&&b===65536&&d.ms>0){r.bytes=b;r.downloadMs=d.ms;r.mbps=b*8/(d.ms*1000)}
+     if(d.status===200&&b===1048576&&d.ms>0){r.bytes=b;r.downloadMs=d.ms;r.mbps=b*8/(d.ms*1000)}
     }
    }catch(e){r.reason=String(e.message||e).slice(0,70)}
   }
