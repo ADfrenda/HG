@@ -10,7 +10,7 @@ CF IP 优选工具 (CFNB) = title="CF IP 优选工具 (CFNB)",content="cfnb IP �
 [Script]
 cfopt-dns = type=dns,script-path=https://raw.githubusercontent.com/zhiaon/Modules/main/surge_scripts/CFOptimizer-dns.js,script-update-interval=86400,engine=jsc,timeout=3
 cfopt-panel = type=generic,script-path=https://raw.githubusercontent.com/ADfrenda/HG/main/CFOptimizer-cfnb.js,script-update-interval=86400,engine=jsc,timeout=10,argument="{{{数量}}}"
-cfopt-page = type=http-request,pattern=^https?://cfoptimizer\.invalid/(?:\?.*)?$,script-path=https://raw.githubusercontent.com/zhiaon/Modules/main/surge_scripts/cfopt-page.js,script-update-interval=86400,engine=jsc,timeout=10,argument="{{{数量}}}"
+cfopt-page = type=http-request,pattern=^https?://cfoptimizer\.invalid/(?:\?.*)?$,script-path=https://raw.githubusercontent.com/ADfrenda/HG/main/cfopt-page-cfnb.js,script-update-interval=86400,engine=jsc,timeout=10,argument="{{{数量}}}"
 cfopt-local = type=http-request,pattern=^https?://cfoptimizer\.invalid/api/,requires-body=true,max-size=4096,script-path=https://raw.githubusercontent.com/ADfrenda/HG/main/CFOptimizer-cfnb.js,script-update-interval=86400,engine=jsc,timeout=90,argument="{{{数量}}}"
 
 [MITM]
